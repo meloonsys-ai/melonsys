@@ -1,0 +1,479 @@
+<title>melon.sys</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Настройка и обслуживание компьютерных клубов в Астане: сервер, CCboot, образы, сеть, абонентская поддержка.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://melonsys.site/">
+<meta property="og:site_name" content="melon.sys">
+<meta property="og:title" content="melon.sys — IT для компьютерных клубов">
+<meta property="og:description" content="Сервер, CCboot, образы, сеть и поддержка каждый день. Бесплатный аудит клуба в Астане.">
+<meta property="og:image" content="https://melonsys.site/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0f1218">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f1218'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ffb067'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: одна колонка 1120px. Герой = заголовок + живая панель ПК клуба (как список клиентов CCboot). Дальше: кейс → услуги → цена с калькулятором → как работаем → контакты. Тёмный стиль задуман как единственный. */
+:root{
+  --bg:#0f1218;
+  --surface:#161b24;
+  --surface-2:#1d2430;
+  --line:#2a3342;
+  --fg:#eef1f6;
+  --muted:#9aa4b5;
+  --melon:#ffb067;      /* акцент: мякоть дыни */
+  --melon-deep:#e8893a;
+  --ok:#5fd59a;         /* статус: онлайн */
+  --boot:#ffb067;       /* статус: загрузка */
+  --off:#3a4352;        /* статус: выключен */
+  --display:"Unbounded","Manrope",system-ui,sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --r:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+section{padding-block:clamp(56px,9vw,104px);border-top:1px solid var(--line)}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.1;letter-spacing:-.01em}
+h2{font-size:clamp(28px,4.4vw,44px);font-weight:700}
+h3{font-size:18px;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--melon)}
+.lead{color:var(--muted);font-size:clamp(16px,1.6vw,19px);max-width:60ch}
+.sec-head{display:grid;gap:14px;margin-bottom:clamp(32px,5vw,52px);max-width:720px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.logo{font-family:var(--display);font-weight:800;font-size:18px;text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo i{width:12px;height:12px;border-radius:50%;background:var(--melon);box-shadow:0 0 0 4px color-mix(in srgb,var(--melon) 22%,transparent)}
+.nav{display:flex;gap:22px;font-size:14px;color:var(--muted)}
+.nav a{text-decoration:none}
+.nav a:hover{color:var(--fg)}
+@media (max-width:760px){.nav{display:none}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:15px;text-decoration:none;padding:14px 22px;border-radius:999px;border:1px solid transparent;cursor:pointer;font-family:var(--body);transition:transform .15s,background .15s}
+.btn:focus-visible,.copy:focus-visible,input:focus-visible{outline:2px solid var(--melon);outline-offset:3px}
+.btn-main{background:var(--melon);color:#1a1209}
+.btn-main:hover{background:var(--melon-deep);transform:translateY(-1px)}
+.btn-ghost{border-color:var(--line);color:var(--fg);background:transparent}
+.btn-ghost:hover{border-color:var(--muted)}
+.btn-sm{padding:9px 16px;font-size:14px}
+
+/* hero */
+.hero{border-top:0;padding-block:clamp(40px,7vw,88px);position:relative;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:44px 44px;opacity:.35;
+  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 70% 40%,#000 0%,transparent 75%);mask-image:radial-gradient(ellipse 70% 80% at 70% 40%,#000 0%,transparent 75%)}
+.hero::after{content:"";position:absolute;z-index:-1;width:min(720px,90vw);aspect-ratio:1;right:-12%;top:-30%;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--melon) 22%,transparent) 0%,transparent 65%);filter:blur(20px);animation:breathe 9s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:translate(0,0) scale(1);opacity:.8}50%{transform:translate(-4%,6%) scale(1.08);opacity:1}}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(32px,5vw,64px);align-items:center}
+.hero h1{font-size:clamp(24px,3.1vw,40px);font-weight:800;text-wrap:initial}
+.hero h1 span,.hero h1 em{display:block;white-space:nowrap}
+@media (max-width:900px){.hero h1{font-size:clamp(24px,6.8vw,44px)}}
+.hero h1 em{font-style:normal;color:var(--melon);
+  background:linear-gradient(100deg,var(--melon) 0%,var(--melon) 40%,#fff3e4 50%,var(--melon) 60%,var(--melon) 100%);background-size:250% 100%;background-position:100% 0;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shine 2.2s ease-out .9s 1 both}
+@keyframes shine{from{background-position:100% 0}to{background-position:0 0}}
+.board{box-shadow:0 30px 80px -40px color-mix(in srgb,var(--melon) 35%,transparent)}
+.pc.off{background:var(--surface-2);border-color:var(--line);color:var(--off)}
+.btn-main span{display:inline-block;transition:transform .2s}
+.btn-main:hover span{transform:translateX(4px)}
+.glow{position:relative;overflow:hidden}
+.glow::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--melon) 14%,transparent),transparent 70%)}
+.glow:hover::after{opacity:1}
+.glow>*{position:relative;z-index:1}
+.hero-text{display:grid;gap:24px;min-width:0}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tags span{border:1px solid var(--line);padding:5px 10px;border-radius:6px}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr}}
+
+/* club board */
+.board{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;min-width:0}
+.board-bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted)}
+.board-bar b{color:var(--fg);font-weight:600}
+.board-bar .live{color:var(--ok)}
+.grid-pc{display:grid;grid-template-columns:repeat(13,1fr);gap:5px;padding:16px}
+.pc{aspect-ratio:1;max-width:100%;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:9px;color:var(--muted);transition:background .4s,border-color .4s,color .4s}
+.pc.on{background:color-mix(in srgb,var(--ok) 16%,var(--surface-2));border-color:color-mix(in srgb,var(--ok) 55%,transparent);color:var(--ok)}
+.pc.boot{background:color-mix(in srgb,var(--boot) 18%,var(--surface-2));border-color:var(--boot);color:var(--boot)}
+.board-log{border-top:1px solid var(--line);padding:12px 16px;font-family:var(--mono);font-size:12px;line-height:20px;color:var(--muted);display:grid;grid-auto-rows:20px;gap:4px;height:92px;overflow:hidden}
+.board-log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board-log .t{color:var(--melon)}
+@media (max-width:480px){.grid-pc{grid-template-columns:repeat(10,1fr);gap:4px;padding:12px}.pc{font-size:0}}
+
+/* case */
+.case{display:grid;grid-template-columns:1fr 1.2fr;gap:clamp(28px,4vw,56px);align-items:start}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.stat{background:var(--surface);padding:22px;display:grid;gap:4px}
+.stat .n{font-family:var(--display);font-size:clamp(28px,3.6vw,40px);font-weight:700;color:var(--melon);font-variant-numeric:tabular-nums;line-height:1}
+.stat .l{font-size:14px;color:var(--muted)}
+.did{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.did li{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
+.did li:first-child{padding-top:10px}
+.did li:last-child{border-bottom:0;padding-bottom:0}
+.groups{display:grid;gap:30px;min-width:0}
+.grp{display:grid;gap:4px}
+.did .ic{font-family:var(--mono);color:var(--ok);font-size:14px;padding-top:2px}
+.did b{display:block;font-weight:700}
+.did span{color:var(--muted);font-size:15px}
+@media (max-width:860px){.case{grid-template-columns:1fr}}
+
+/* services */
+.svc{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.case-left{display:grid;gap:16px;min-width:0}
+.event{border:1px solid color-mix(in srgb,var(--melon) 45%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--melon) 14%,var(--surface)),var(--surface) 70%);border-radius:var(--r);padding:22px;display:grid;gap:8px}
+.event p{color:var(--muted);font-size:15px}
+.svc article{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:10px;align-content:start;min-width:0}
+.svc .k{font-family:var(--mono);font-size:12px;color:var(--melon);letter-spacing:.06em}
+.svc p{color:var(--muted);font-size:15px}
+.svc article.feature{grid-column:span 4;display:grid;grid-template-columns:1fr 1.4fr;gap:24px;background:linear-gradient(135deg,color-mix(in srgb,var(--melon) 12%,var(--surface)),var(--surface) 60%);border-color:color-mix(in srgb,var(--melon) 40%,var(--line))}
+.auto{list-style:none;margin:0;padding:0;display:grid;gap:10px;font-size:15px}
+.auto li{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:baseline}
+.auto code{font-family:var(--mono);font-size:12px;color:var(--melon);background:var(--bg);border:1px solid var(--line);padding:2px 0;border-radius:5px;white-space:nowrap;text-align:center}
+@media (max-width:1000px) and (min-width:901px){.svc{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:900px){.svc{grid-template-columns:1fr 1fr}.svc article.feature{grid-column:span 2;grid-template-columns:1fr}}
+@media (max-width:600px){.svc{grid-template-columns:1fr}.svc article.feature{grid-column:span 1}}
+
+/* price */
+.price{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+.price-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(22px,3vw,32px);display:grid;gap:18px;align-content:start;min-width:0}
+.big{font-family:var(--display);font-weight:800;font-size:clamp(40px,6vw,64px);line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-family:var(--body);font-size:16px;font-weight:600;color:var(--muted);margin-left:6px}
+.incl{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:15px}
+.incl li::before{content:"+ ";color:var(--ok);font-family:var(--mono)}
+.calc label{font-size:14px;color:var(--muted)}
+.calc-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+input[type=range]{flex:1;min-width:0;accent-color:var(--melon)}
+input[type=number]{width:90px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--mono);font-size:16px}
+.total{font-family:var(--display);font-size:clamp(30px,4.4vw,44px);font-weight:700;color:var(--melon);font-variant-numeric:tabular-nums;line-height:1.1}
+.note{font-size:13px;color:var(--muted)}
+.compare{display:grid;gap:8px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+.compare div{display:flex;justify-content:space-between;gap:12px}
+.compare b{color:var(--fg);font-variant-numeric:tabular-nums}
+@media (max-width:860px){.price{grid-template-columns:1fr}}
+
+/* steps */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;counter-reset:s}
+.steps li{counter-increment:s;display:grid;gap:10px;align-content:start;padding-top:18px;border-top:2px solid var(--line)}
+.steps li:first-child{border-top-color:var(--melon)}
+.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);font-size:13px;color:var(--melon)}
+.steps p{color:var(--muted);font-size:15px}
+@media (max-width:860px){.steps{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.steps{grid-template-columns:1fr}}
+
+/* contact */
+.contact{background:var(--surface);border:1px solid var(--line);border-radius:calc(var(--r) + 6px);padding:clamp(28px,5vw,56px);display:grid;grid-template-columns:1.2fr 1fr;gap:32px;align-items:center}
+.contact h2 em{font-style:normal;color:var(--melon)}
+.links{display:grid;gap:12px}
+.link{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--bg);text-decoration:none;transition:border-color .15s}
+a.link:hover{border-color:var(--melon)}
+.link .lbl{font-size:13px;color:var(--muted)}
+.link .val{font-family:var(--mono);font-size:15px;font-weight:600}
+.copy{background:var(--surface-2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:var(--body)}
+@media (max-width:860px){.contact{grid-template-columns:1fr}}
+
+footer{padding-block:28px;font-size:13px;color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top"><i></i>melon.sys</a>
+    <nav class="nav">
+      <a href="#case">Опыт</a>
+      <a href="#services">Услуги</a>
+      <a href="#price">Цена</a>
+      <a href="#contact">Контакты</a>
+    </nav>
+    <a class="btn btn-main btn-sm" href="https://t.me/melonsys" target="_blank" rel="noopener">Написать</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-text">
+        <span class="eyebrow">IT для компьютерных клубов · Астана</span>
+        <h1><span>Клуб работает.</span> <em>Ты зарабатываешь.</em></h1>
+        <p class="lead">Настраиваю и обслуживаю компьютерные клубы: сервер, CCboot, образы, сеть и поддержка каждый день. Чтобы ни один ПК не простаивал, а игроки не уходили к конкурентам.</p>
+        <div class="cta-row">
+          <a class="btn btn-main" href="https://t.me/melonsys" target="_blank" rel="noopener">Бесплатный аудит клуба <span>→</span></a>
+          <a class="btn btn-ghost" href="#price">Сколько стоит</a>
+        </div>
+        <div class="tags"><span>iCafe</span><span>Senet</span><span>CCboot</span><span>Windows Server</span><span>MikroTik</span></div>
+      </div>
+
+      <div class="board" aria-label="Пример панели клуба: состояние клиентских ПК">
+        <div class="board-bar">
+          <span>CCboot · <b>зал 1</b></span>
+          <span>клиенты: <b id="cTotal">52</b> · онлайн: <b class="live" id="cOn">52</b></span>
+        </div>
+        <div class="grid-pc" id="pcs"></div>
+        <div class="board-log" id="log">
+          <div><span class="t">06:00</span> сервер: плановая перезагрузка — ок</div>
+          <div><span class="t">06:12</span> обновлено 3 игры на сервере</div>
+          <div><span class="t">10:00</span> клуб открыт, сбоев нет</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="case">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Опыт</span>
+        <h2>6+ лет в IT: от систем учёта до серверов на 120 ПК</h2>
+        <p class="lead">Автоматизирую бизнес и держу инфраструктуру в строю. Знаю клуб целиком: сервер, зал, кассу и людей на смене.</p>
+      </div>
+      <div class="case">
+        <div class="case-left">
+        <div class="stats">
+          <div class="stat"><span class="n">6+ лет</span><span class="l">в IT</span></div>
+          <div class="stat"><span class="n">4 года</span><span class="l">в компьютерных клубах</span></div>
+          <div class="stat"><span class="n">170+</span><span class="l">ПК на обслуживании</span></div>
+          <div class="stat"><span class="n">50 → 120</span><span class="l">ПК: расширение точки</span></div>
+        </div>
+        <div class="event">
+          <span class="eyebrow">Турнир</span>
+          <h3>Турнир Казатомпрома</h3>
+          <p>Подготовил клуб к турниру и полностью курировал техническую часть во время игр: железо, сеть и сервер.</p>
+        </div>
+        </div>
+        <div class="groups">
+          <div class="grp">
+            <span class="eyebrow">Инфраструктура</span>
+            <ul class="did">
+              <li><span class="ic">✓</span><div><b>Серверная часть под 120 бездисковых ПК</b><span>Развернул и настроил Windows Server и CCboot под нагрузку большого зала.</span></div></li>
+              <li><span class="ic">✓</span><div><b>Масштабирование клуба с 50 до 120 ПК</b><span>Сборка, установка и ввод новых машин в бездисковую сеть.</span></div></li>
+              <li><span class="ic">✓</span><div><b>Сборка ПК и серверов</b><span>Подбор комплектующих под апгрейд и обновление зала на новое железо.</span></div></li>
+              <li><span class="ic">✓</span><div><b>Сборка и оптимизация образа</b><span>Образ под клиентские ПК и игры: быстрая загрузка, стабильный FPS, ничего лишнего.</span></div></li>
+            </ul>
+          </div>
+          <div class="grp">
+            <span class="eyebrow">Клубный софт</span>
+            <ul class="did">
+              <li><span class="ic">✓</span><div><b>iCafe и Senet в продакшене</b><span>Настройка, тарифы, типичные сбои и как их не допускать.</span></div></li>
+              <li><span class="ic">✓</span><div><b>PS5 в системе управления клубом</b><span>Консоли стартуют и гаснут по сессиям через Sonoff, как обычные ПК.</span></div></li>
+            </ul>
+          </div>
+          <div class="grp">
+            <span class="eyebrow">Люди</span>
+            <ul class="did">
+              <li><span class="ic">✓</span><div><b>Обучение персонала</b><span>Учил сотрудников клубов и ресторанов (система учёта INSIDE) работать с системами без звонков в поддержку.</span></div></li>
+              <li><span class="ic">✓</span><div><b>Видел клуб глазами зала</b><span>Работал на смене, поэтому знаю, что раздражает гостей и что тормозит админов.</span></div></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Услуги</span>
+        <h2>Всё, чтобы клуб работал без сбоев</h2>
+      </div>
+      <div class="svc">
+        <article><span class="k">СЕРВЕР</span><h3>Сборка и настройка сервера</h3><p>Подбор железа, сборка, Windows Server, подключение к CCboot.</p></article>
+        <article><span class="k">ЖЕЛЕЗО</span><h3>Сборка ПК и апгрейд</h3><p>Подбираю комплектующие, собираю новые ПК и обновляю зал без лишних трат.</p></article>
+        <article><span class="k">ОБРАЗЫ</span><h3>Образ для клиентских ПК</h3><p>Чистый быстрый образ: игры, лаунчеры, драйверы. ПК грузятся быстро и одинаково.</p></article>
+        <article><span class="k">СЕТЬ</span><h3>Сеть и MikroTik</h3><p>Настройка роутера, разделение сети, стабильный интернет в зале.</p></article>
+        <article><span class="k">ПОДДЕРЖКА</span><h3>Выезды и удалёнка</h3><p>Большинство проблем решаю удалённо. Если нужно, приезжаю по Астане.</p></article>
+        <article><span class="k">КОМАНДА</span><h3>Обучение персонала</h3><p>Админы на смене знают, что делать с типичными проблемами, и не звонят по пустякам.</p></article>
+        <article><span class="k">ШЕЛЛ</span><h3>iCafe и Senet</h3><p>Установка, настройка, перенос клуба с одного шелла на другой.</p></article>
+        <article><span class="k">ТУРНИРЫ</span><h3>Подготовка к турнирам</h3><p>Готовлю клуб к турниру и веду его техническую часть, пока идут игры.</p></article>
+        <article class="feature">
+          <div style="display:grid;gap:10px;align-content:start">
+            <span class="k">АВТОМАТИЗАЦИЯ</span>
+            <h3>Клуб, который следит за собой сам</h3>
+            <p>Рутину, которую обычно делают руками, настраиваю на автомат.</p>
+          </div>
+          <ul class="auto">
+            <li><code>авто</code> Обновление игр на стороне сервера: Steam, Epic Games, Lesta</li>
+            <li><code>06:00</code> Перезагрузка сервера каждый день для профилактики</li>
+            <li><code>24/7</code> Мониторинг сервера и ПК: узнаю о сбое раньше, чем вам позвонят</li>
+            <li><code>1/мес</code> Отчёт владельцу: что случилось и что сделано</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="price">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Цена</span>
+        <h2>Платишь за количество ПК. Без сюрпризов</h2>
+        <p class="lead">Абонентская поддержка дешевле штатного сисадмина, а вопросы решаются так же быстро.</p>
+      </div>
+      <div class="price">
+        <div class="price-card">
+          <span class="eyebrow">Абонентская поддержка</span>
+          <div class="big">1 050 ₸<small>за ПК / месяц</small></div>
+          <ul class="incl">
+            <li>Удалённая поддержка каждый день</li>
+            <li>Плановые выезды и профилактика</li>
+            <li>Обновление игр на сервере</li>
+            <li>Перезагрузка сервера по расписанию</li>
+            <li>Мониторинг сервера и ПК 24/7</li>
+            <li>Ежемесячный отчёт</li>
+          </ul>
+          <p class="note">Минимальный платёж — 25 000 ₸ в месяц (клубы до 24 ПК). Разовые работы (сервер, образ, сеть, открытие клуба) считаю после аудита.</p>
+        </div>
+        <div class="price-card calc">
+          <span class="eyebrow">Посчитай для своего клуба</span>
+          <label for="pcCount">Сколько ПК в клубе</label>
+          <div class="calc-row">
+            <input id="pcRange" type="range" min="10" max="200" step="1" value="50" aria-label="Количество ПК">
+            <input id="pcCount" type="number" min="1" max="500" value="50">
+          </div>
+          <div>
+            <div class="total" id="total">52 500 ₸</div>
+            <p class="note" id="totalNote">в месяц за весь клуб</p>
+          </div>
+          <div class="compare">
+            <div><span>Цена за 1 ПК в день</span><b id="perDay">35 ₸</b></div>
+            <div><span>Аудит перед стартом</span><b>бесплатно</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Как начинаем</span>
+        <h2>От первого сообщения до спокойной работы</h2>
+      </div>
+      <ol class="steps">
+        <li><h3>Аудит</h3><p>Приезжаю в клуб, смотрю сервер, образ, сеть и загрузку ПК. Бесплатно.</p></li>
+        <li><h3>План</h3><p>Показываю, что тормозит и что это стоит клубу. Называю цену работ.</p></li>
+        <li><h3>Настройка</h3><p>Привожу всё в порядок и ставлю автоматизацию.</p></li>
+        <li><h3>Поддержка</h3><p>Слежу за клубом каждый день и раз в месяц присылаю отчёт.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap">
+      <div class="contact">
+        <div style="display:grid;gap:16px">
+          <span class="eyebrow">Контакты</span>
+          <h2>Запиши клуб на <em>бесплатный аудит</em></h2>
+          <p class="lead">Даниил, melon.sys. Напиши, сколько у тебя ПК и на каком шелле работает клуб. Отвечу в тот же день.</p>
+        </div>
+        <div class="links">
+          <a class="link" href="https://t.me/melonsys" target="_blank" rel="noopener"><span><span class="lbl">Telegram</span><br><span class="val">@melonsys</span></span><span aria-hidden="true">→</span></a>
+          <a class="link" href="https://wa.me/77066995240" target="_blank" rel="noopener"><span><span class="lbl">WhatsApp</span><br><span class="val">+7 706 699 52 40</span></span><span aria-hidden="true">→</span></a>
+          <div class="link"><span><span class="lbl">Телефон</span><br><span class="val" id="phone">+7 706 699 52 40</span></span><button class="copy" id="copyBtn" type="button">Копировать</button></div>
+          <a class="link" href="https://www.instagram.com/melon.sys/" target="_blank" rel="noopener"><span><span class="lbl">Instagram</span><br><span class="val">@melon.sys</span></span><span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span>melon.sys · IT для компьютерных клубов</span><span>Астана</span></div>
+</footer>
+
+<script>
+(function(){
+  // панель ПК
+  const N=52, grid=document.getElementById('pcs'), onEl=document.getElementById('cOn');
+  const pcs=[];
+  for(let i=1;i<=N;i++){const d=document.createElement('div');d.className='pc on';d.textContent=String(i).padStart(2,'0');grid.appendChild(d);pcs.push(d)}
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const count=()=>{onEl.textContent=pcs.filter(p=>p.classList.contains('on')).length};
+
+  // подсветка карточек за курсором
+  document.querySelectorAll('.svc article,.event,.price-card,.stat').forEach(el=>{
+    el.classList.add('glow');
+    el.addEventListener('pointermove',e=>{const r=el.getBoundingClientRect();el.style.setProperty('--mx',(e.clientX-r.left)+'px');el.style.setProperty('--my',(e.clientY-r.top)+'px')});
+  });
+
+  // утренний запуск зала: волна по диагонали
+  if(!reduce){
+    pcs.forEach(p=>{p.classList.remove('on');p.classList.add('off')});count();
+    const cols=13;
+    pcs.forEach((p,i)=>{
+      const d=((i%cols)+Math.floor(i/cols))*55+250;
+      setTimeout(()=>{p.classList.replace('off','boot')},d);
+      setTimeout(()=>{p.classList.replace('boot','on');count()},d+420);
+    });
+  }
+
+  if(!reduce){
+    setTimeout(startLive,2400);
+  }
+  function startLive(){
+    const log=document.getElementById('log');
+    const msgs=[
+      i=>`ПК-${i} перезапущен с образа — ок`,
+      i=>`ПК-${i}: загрузка за 38 сек`,
+      i=>`ПК-${i} вернулся в зал`
+    ];
+    let t=10*60;
+    setInterval(()=>{
+      const idx=Math.floor(Math.random()*N), el=pcs[idx];
+      if(!el.classList.contains('on'))return;
+      el.classList.remove('on');el.classList.add('boot');
+      onEl.textContent=pcs.filter(p=>p.classList.contains('on')).length;
+      setTimeout(()=>{
+        el.classList.remove('boot');el.classList.add('on');
+        onEl.textContent=pcs.filter(p=>p.classList.contains('on')).length;
+        t+=7+Math.floor(Math.random()*20);
+        const hh=String(Math.floor(t/60)%24).padStart(2,'0'), mm=String(t%60).padStart(2,'0');
+        const row=document.createElement('div');
+        row.innerHTML=`<span class="t">${hh}:${mm}</span> `+msgs[Math.floor(Math.random()*msgs.length)](String(idx+1).padStart(2,'0'));
+        log.appendChild(row);
+        while(log.children.length>3)log.removeChild(log.firstChild);
+      },1600);
+    },2600);
+  }
+
+  // калькулятор
+  const PRICE=1050, MIN=25000, range=document.getElementById('pcRange'), num=document.getElementById('pcCount');
+  const total=document.getElementById('total'), perDay=document.getElementById('perDay'), note=document.getElementById('totalNote');
+  const fmt=n=>n.toLocaleString('ru-RU').replace(/ /g,' ');
+  function upd(v){
+    v=Math.max(1,Math.min(500,parseInt(v,10)||0));
+    const sum=Math.max(MIN,v*PRICE);
+    total.textContent=fmt(sum)+' ₸';
+    note.textContent=v*PRICE<MIN?'в месяц — минимальный платёж для клубов до 24 ПК':'в месяц за весь клуб';
+    perDay.textContent=Math.round(sum/v/30)+' ₸';
+  }
+  range.addEventListener('input',()=>{num.value=range.value;upd(range.value)});
+  num.addEventListener('input',()=>{if(num.value>=10&&num.value<=200)range.value=num.value;upd(num.value)});
+  upd(50);
+
+  // копирование номера
+  const btn=document.getElementById('copyBtn'), phone=document.getElementById('phone');
+  btn.addEventListener('click',()=>{
+    const txt='+77066995240';
+    const done=()=>{btn.textContent='Скопировано';setTimeout(()=>btn.textContent='Копировать',1800)};
+    try{
+      navigator.clipboard.writeText(txt).then(done).catch(sel);
+    }catch(e){sel()}
+    function sel(){const r=document.createRange();r.selectNodeContents(phone);const s=getSelection();s.removeAllRanges();s.addRange(r);btn.textContent='Выделено'}
+  });
+})();
+</script>
